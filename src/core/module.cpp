@@ -8,6 +8,7 @@
 #include "common/memory_patcher.h"
 #include "common/sha1.h"
 #include "common/string_util.h"
+#include "core/address_space.h"
 #include "core/aerolib/aerolib.h"
 #include "core/cpu_patches.h"
 #include "core/libraries/error_codes.h"
@@ -153,7 +154,8 @@ void Module::LoadModuleToMemory(u32& max_tls_index) {
             }
 
             // Map module segments
-            const auto memory_type = IsSystemLib() ? VMAType::Code : VMAType::Flexible;
+            const auto memory_type =
+                (IsSystemLib() || AddressSpace::Is39Bit()) ? VMAType::Code : VMAType::Flexible;
             s32 result = memory->MapMemory(&segment_addr, segment_vaddr, segment_size, segment_prot,
                                            MemoryMapFlags::Fixed, memory_type, name);
             ASSERT_MSG(result == ORBIS_OK, "Failed to map segment at {:#x} for module {}",
