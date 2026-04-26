@@ -8,7 +8,6 @@
 #include "common/memory_patcher.h"
 #include "common/sha1.h"
 #include "common/string_util.h"
-#include "core/address_space.h"
 #include "core/aerolib/aerolib.h"
 #include "core/cpu_patches.h"
 #include "core/libraries/error_codes.h"
@@ -16,6 +15,9 @@
 #include "core/memory.h"
 #include "core/module.h"
 #include "core/tls.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace Core {
 
@@ -154,8 +156,14 @@ void Module::LoadModuleToMemory(u32& max_tls_index) {
             }
 
             // Map module segments
-            const auto memory_type =
-                (IsSystemLib() || AddressSpace::Is39Bit()) ? VMAType::Code : VMAType::Flexible;
+            bool is_wine = false;
+
+#ifdef _WIN32
+            auto ntdll_handle = GetModuleHandleW(L"ntdll.dll");
+            is_wine = GetProcAddress(ntdll_handle, "wine_get_version") != nullptr;
+#endif
+
+            const auto memory_type = (IsSystemLib() || is_wine) ? VMAType::Code : VMAType::Flexible;
             s32 result = memory->MapMemory(&segment_addr, segment_vaddr, segment_size, segment_prot,
                                            MemoryMapFlags::Fixed, memory_type, name);
             ASSERT_MSG(result == ORBIS_OK, "Failed to map segment at {:#x} for module {}",
