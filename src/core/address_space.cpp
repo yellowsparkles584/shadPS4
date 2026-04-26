@@ -142,10 +142,10 @@ struct AddressSpace::Impl {
 
         // Determine the free address ranges we can access.
         const VAddr va_size = reinterpret_cast<VAddr>(sys_info.lpMaximumApplicationAddress);
-        AddressSpace::g_is_39bit = va_size <= 0x7FFFFFFFFFULL;
+        const bool is_39bit = va_size <= 0x7FFFFFFFFFULL;
 
         VAddr next_addr = SYSTEM_MANAGED_MIN;
-        if (AddressSpace::g_is_39bit) {
+        if (is_39bit) {
             supported_user_max = 0x7000000000ULL;
             LOG_WARNING(
                 Core, "39-bit address space detected, reducing user max to {:#x} to avoid problems",
