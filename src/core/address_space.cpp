@@ -106,6 +106,7 @@ struct AddressSpace::Impl {
         SYSTEM_INFO sys_info{};
         GetSystemInfo(&sys_info);
         u64 alignment = sys_info.dwAllocationGranularity;
+        const VAddr va_size = reinterpret_cast<VAddr>(sys_info.lpMaximumApplicationAddress);
 
         // Older Windows builds have a severe performance issue with VirtualAlloc2.
         // We need to get the host's Windows version, then determine if it needs a workaround.
@@ -121,7 +122,7 @@ struct AddressSpace::Impl {
         RTL_OSVERSIONINFOW os_version_info{};
         RtlGetVersion(&os_version_info);
 
-        u64 supported_user_max = USER_MAX;
+        u64 supported_user_max = va_size;
         // This is the build number for Windows 11 22H2
         static constexpr s32 AffectedBuildNumber = 22621;
 
@@ -141,15 +142,10 @@ struct AddressSpace::Impl {
         }
 
         // Determine the free address ranges we can access.
-        const VAddr va_size = reinterpret_cast<VAddr>(sys_info.lpMaximumApplicationAddress);
         const bool is_39bit = va_size <= 0x7FFFFFFFFFULL;
 
         VAddr next_addr = SYSTEM_MANAGED_MIN;
         if (is_39bit) {
-            supported_user_max = 0x7000000000ULL;
-            LOG_WARNING(
-                Core, "39-bit address space detected, reducing user max to {:#x} to avoid problems",
-                supported_user_max);
             next_addr = 0x80000000ULL;
         }
 
