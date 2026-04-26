@@ -33,10 +33,6 @@ public:
         return backing_base;
     }
 
-    [[nodiscard]] static bool Is39Bit() noexcept {
-        return g_is_39bit;
-    }
-
     [[nodiscard]] VAddr SystemManagedVirtualBase() noexcept {
         return reinterpret_cast<VAddr>(system_managed_base);
     }
@@ -93,7 +89,6 @@ public:
 
 private:
     struct Impl;
-    static inline bool g_is_39bit;
     std::unique_ptr<Impl> impl;
     u8* backing_base{};
     u8* system_managed_base{};
